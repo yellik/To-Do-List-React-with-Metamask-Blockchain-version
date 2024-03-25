@@ -11,6 +11,11 @@ export const TodoListComp = async() => {
         const signer = provider.getSigner();
         return new ethers.Contract(address, abi, signer);
     }
+     const initializeReadContract = () => {
+        const provider = new ethers.provider.Web3Provider(window.ethereum)
+        const signer = provider.getSigner();
+        return new ethers.Contract(address, abi, signer);
+    }
 
     async function requestAccount () {
         const account = await window.ethereum.request({ method: 'ethRequestAccount'});
@@ -19,9 +24,8 @@ export const TodoListComp = async() => {
 
     async function fetchTodos() {
         if(typeof window.ethereum !== 'undefined'){
-        
+            const contract = initializeReadContract();
         try {
-
            const indexes = await readContract['getIndexList']();
            console.log(indexes);
         } catch (error) {

@@ -1,78 +1,115 @@
 import { ethers } from "ethers";
 import "./App.css";
-import { MetaMask } from "./components/Metamast";
+import { MetaMask } from "./components/Metamask";
 import { useState, useEffect } from "react";
 import { abi, address } from "./config";
+import { writeContract } from "./contracts/writeContract";
+import { initializeProvider } from "./scripts/accountScripts";
 
 function App() {
-    const [account, setAccount] = useState('');
-    const [todos, setTodos] = useState([]);
-    const [readContract, setReadContract] = useState();
+const [account, setAccount] = useState()
+const [writeContract, setWriteContract] = useState();
+const [readContract, setReadContract] = useState();
 
-    useEffect(() => {
-      const makeContract = async () => {
-          try {
-              // Initialize the read contract
-              const todos = new ethers.Contract(
-                  address,
-                  abi,
-                  window.ethereum
-              );
-              setTodos(todos);
+  let provider;
+  let signer;
 
-              // Fetch todos count from the contract
-       
-              console.log(abi);
-              console.log(typeof(abi));
-              console.log(abi.length);
+  const initializeReadProvider = () => {
+    provider = new ethers.BrowserProvider(window.ethereum)
+    
+   
+  }
+  
+  const initializeProvider = () => {
+    provider = new ethers.BrowserProvider(window.ethereum)
+    
+   
+  }
+  
 
-              const getIndexList = async() => {
-                const temp = [];
-                abi.forEach((item) => {
-                    temp.push(item);
-                });
-                console.log(temp);
-                
-            };
-            
-            getIndexList();
-          
-            console.log(getIndexList.todoCount());
-            
+ if(!window.ethereum){
+    console.log(`We coudln't find a Web3 wallet. Please install a wallet that supports ethereum`);
+ } 
 
-            
-          } catch (error) {
-              console.error('Error initializing contract or fetching todos:', error);
-              // Handle errors here if needed
-          }
-      };
-      // Request account from MetaMask
-      const requestAccount = async () => {
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            setAccount(accounts[0]);
-        } catch (error) {
-            console.error('Error requesting accounts:', error);
-            // Handle errors here if needed
-        }
-    };
-      requestAccount();
-      makeContract();
-  }, []);
+ 
+ 
+    
 
-
+useEffect(() => {
+   
+  const makeReadContract = async() => {
         
-    return (
-        <div>
-            <h1>Todos</h1>
-            <ul>
-                {todos.map((todo, index) => (
-                    <li key={index}>{todo.text}</li>
-                ))}
-            </ul>
-            <MetaMask />
-        </div>
-    );
-}
+    console.log(provider)
+    if(ethereum.window === 'undefined'){
+      initializeReadProvider
+      
+    
+    }
+    console.log(provider)
 
+    const myReadContract = new ethers.Contract(
+      address,
+      abi,
+      provider
+          )
+      setReadContract(myReadContract);
+      console.log(myReadContract);
+      console.log(myReadContract.getAddress());
+      
+      const count = await myReadContract.todoCount()
+      console.log(count);
+      
+      
+     
+      
+    
+    }
+    
+    
+     makeReadContract()
+     const makeWriteContract = async () => {
+      if (typeof window.ethereum !== "undefined") {
+        initializeProvider();
+      }
+  
+      const initiazeWriteContract = async () => {
+        signer = await provider.getSigner();
+        const myWriteContract = new ethers.Contract(
+          address,
+          abi,
+          signer
+        );
+        setWriteContract(myWriteContract);
+        console.log(myWriteContract.getAddress());
+      };
+  
+      initiazeWriteContract();
+    };
+  
+    makeWriteContract();
+      }, [])
+      
+      
+    
+      const addTodo = async () => {
+        try {
+          const result = await writeContract.createTodo("add a new todo");
+          await result.wait();
+          console.log(result);
+        } catch (error) {
+          console.log("there was an error in adding todo", error);
+        }
+      };
+    
+     
+
+return (
+  
+  <div>
+    
+    <button onClick={addTodo}>Add to do</button>
+     <MetaMask/>
+  </div>
+  )
+}
 export default App;
