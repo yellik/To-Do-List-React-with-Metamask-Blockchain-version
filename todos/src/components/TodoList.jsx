@@ -1,59 +1,42 @@
-import { address, abi } from "../config";
-import { readContract } from "../contracts/readContract";
+import { Item } from "./Item"
+import { ethers } from "ethers"
+import { useEffect, useState } from "react"
+import { toggleTodo, addTodo } from "../scripts/handlers"
+import { AddTodo } from "./AddTodo"
 
-export const TodoListComp = async() => {
-    const [account, setAccount] = useState('');
-    const [todos, setTodos] = useState();
+let provider;
+provider = new ethers.BrowserProvider(window.ethereum)
 
-
-     const initializeProvider = () => {
-        const provider = new ethers.provider.Web3Provider(window.ethereum)
-        const signer = provider.getSigner();
-        return new ethers.Contract(address, abi, signer);
-    }
-     const initializeReadContract = () => {
-        const provider = new ethers.provider.Web3Provider(window.ethereum)
-        const signer = provider.getSigner();
-        return new ethers.Contract(address, abi, signer);
-    }
-
-    async function requestAccount () {
-        const account = await window.ethereum.request({ method: 'ethRequestAccount'});
-        setAccount(account[0]);
-    }
-
-    async function fetchTodos() {
-        if(typeof window.ethereum !== 'undefined'){
-            const contract = initializeReadContract();
-        try {
-           const indexes = await readContract['getIndexList']();
-           console.log(indexes);
-        } catch (error) {
-            console.log('error indexes', error);
-        }
-    }
-
-}
+export const TodoListComp = ({todoId, todoText}) => {
+    const[inputValue, setInputValue] = useState('')
     
-    
+   useEffect(() => {
+ 
 
-    //const todoList = await readContract['getIndexList']();
+   }, [])
 
-    /*const temp = [];
-
-    todoList.forEach(async(i) => {
-        const todo = await readContract['todos'](i);
-        temp.push(todo)
-    })
-
-    setTodos(temp)*/
-
+  const onChange = (event) => {
+    setInputValue(event.target.value)
+  }
+   
     return (
         <>
-            {todoList.map(()=> {
-
-            })}
-
+        <ul>
+            <div>
+            
+                <Item todoId={todoId} todoText={todoText}/>
+                
+            </div>
+        </ul>
+        <label htmlFor="todo">Add a new todo:</label>
+        <input 
+        type="text"
+        value={inputValue}
+        onChange={onChange}
+        placeholder="type your task here"
+         />
+        <button onClick={()=> addTodo({todoId, todoText, inputValue})}>Add a new Task</button>
+        
         </>
-    )
+   )
 }

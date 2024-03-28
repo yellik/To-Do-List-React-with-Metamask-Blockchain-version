@@ -3,138 +3,80 @@ import "./App.css";
 import { MetaMask } from "./components/Metamask";
 import { useState, useEffect } from "react";
 import { abi, address } from "./config";
-import { handleDone } from "./scripts/handlers";
+
+import { TodoListComp } from "./components/TodoList";
 import { writeContract } from "./contracts/writeContract";
 import { initializeProvider } from "./scripts/accountScripts";
 
 function App() {
-const [todos, setTodos] = useState([])
-const [account, setAccount] = useState()
-const [writeContract, setWriteContract] = useState();
-const [readContract, setReadContract] = useState();
+  const [todos, setTodos] = useState([]);
+  const [account, setAccount] = useState();
+  const [writeContract, setWriteContract] = useState();
+  const [readContract, setReadContract] = useState();
 
   let provider;
   let signer;
 
   const initializeReadProvider = () => {
-    provider = new ethers.BrowserProvider(window.ethereum)
-    
-   
+    provider = new ethers.BrowserProvider(window.ethereum);
+    return provider;
+  };
+  const initializeProvider = async () => {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+  };
+
+  if (!window.ethereum) {
+    console.log(
+      `We coudln't find a Web3 wallet. Please install a wallet that supports ethereum`
+    );
   }
-  
-   const initializeProvider = async() => {
-    provider = new ethers.BrowserProvider(window.ethereum)
-    signer = await provider.getSigner()
-   
-  }
 
- if(!window.ethereum){
-    console.log(`We coudln't find a Web3 wallet. Please install a wallet that supports ethereum`);
- } 
-
-useEffect(() => {
-   
-  const makeReadContract = async() => {
-        
-    console.log(provider)
-    if(ethereum.window === 'undefined'){
-      initializeReadProvider();
-      
-    
-    }
-    console.log(provider)
-
-    const myReadContract = new ethers.Contract(
-      address,
-      abi,
-      provider
-          )
-      setReadContract(myReadContract);
-      console.log(myReadContract);
-      console.log(await myReadContract.getAddress());
-      
-      const count = await myReadContract['todoCount']();
-      console.log(count); 
-
-      const todos = [];
-      for (let i = 1; i <= count; i++) {
-        const todo = await myReadContract['todos'](i);
-        todos.push(todo);
-        console.log(todo);
-        console.log(todos.length); //(should be the same as count)
-       
+  useEffect(() => {
+    const makeFetchTodo = async () => {
+      if (window.ethereum === "undefined") {
+        initializeReadProvider();
       }
-      
-    setTodos(todos)
+      console.log(provider);
+      const todosContract = new ethers.Contract(address, abi, await provider);// ==> const contract = new 
+      console.log(provider); //make sure provider is present
+      console.log(todosContract);
 
-  
-
-    }
-  
-     makeReadContract()
-
-     const makeWriteContract = async () => {
-      if (typeof window.ethereum !== "undefined") {
-        initializeProvider();
-      }
-  
-      const initiazeWriteContract = async () => {
-        signer = await provider.getSigner();
-        const myWriteContract = new ethers.Contract(
-          address,
-          abi,
-          signer
-        );
-        setWriteContract(myWriteContract);
-        console.log(myWriteContract.getAddress());
-      };
-  
-      initiazeWriteContract();
-    };
-  
-    makeWriteContract();
-      }, [])
+      const todoCount = await todosContract["todoCount"]();//return the number of todos
+      //const existingTodos = await todos["todos"]();//return an array of todo data //index//text//bool
+      console.log(todoCount);
+      const fetchTodoList = new ethers.Contract(address, abi, await provider);
+      console.log(provider);
+      console.log(fetchTodoList);
+      const existingTodos = todosContract['todos']();
       
-      
-    
-      const addTodo = async () => {
-        try {
-          const result = await writeContract.createTodo("add a new todo");
-          await result.wait();
-          console.log(result);
-        } catch (error) {
-          console.log("there was an error in adding todo", error);
+      console.log(existingTodos);
+      try{
+       const todoList = [];
+        for (let i = 1; i <= todoCount; i++) {
+            const todo = await todosContract['todos'](i);
+            todoList.push(todo);
         }
-      };
-    
 
-return (
+        // Log the fetched todo list
+        console.log("Todo List:", todoList);
+    } catch (error) {
+        console.error("Error fetching todos:", error);
+    }
+    };
+    makeFetchTodo();
+
+    
+  }, []);
+
   
 
+  return (
     <div>
-      <ul >
-
-        {todos.map((todo) => {
-          const todoIndex = todo[0];
-          const todoId = todo[0]; // 1    
-          const todoText = todo[1]; // 'Hello world'
-          const completed = todo[2]; // false
-         
-          return (
-          
-          <div>
-            <li key={todoIndex} >
-              {`ID: ${todoId}, Text: ${todoText} `}
-            </li>
-            <button provider={provider} signer={signer} onClick={handleDone}>{`DONE: ${completed}`}</button>
-            <button>Delete</button>
-          </div>  
-          )
-        })}
-      </ul>
-    <button onClick={addTodo}>Add to do</button>
-     <MetaMask/>
-  </div>
-  )
+     
+      <TodoListComp />
+      <MetaMask />
+    </div>
+  );
 }
 export default App;

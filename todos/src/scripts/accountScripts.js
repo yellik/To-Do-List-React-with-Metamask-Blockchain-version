@@ -12,3 +12,8 @@ export const initializeProvider = () => {
     signer = provider.getSigner();
     return new ethers.Contract(address, abi, signer);
   }
+
+  export const initializeReadProvider = () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    return provider;
+  }
