@@ -8,63 +8,83 @@ import { toggleTodo, removeTodo } from "../scripts/handlers";
 const provider = new ethers.BrowserProvider(window.ethereum)
 
 export const Item = () => {
-   const [todos, setTodos] = useState([])
+   const [todos, setTodos] = useState(() => {
+    const storedData = localStorage.getItem('data');
+    return storedData ? JSON.parse(storedData) : [];
+  });
    const [readContract, setReadContract] = useState()
    useEffect(() => {
     const makeTodoContract = async () => {
-        if(window.ethereum === 'undefined'){
-            initializeProvider()
+        if (window.ethereum === 'undefined') {
+            initializeProvider();
         }
         console.log(provider);
-    const todoContract = new ethers.Contract(address, abi, provider);
-    console.log(todoContract);
-    setReadContract(todoContract)
+        const todoContract = new ethers.Contract(address, abi, provider);
+        console.log(todoContract);
+        setReadContract(todoContract);
 
-    const todoCount = await todoContract['todoCount']();
-    
+        const todoCount = await todoContract['todoCount']();
 
-      try{
-       const todoList = [];
-        for (let i = 1; i <= todoCount; i++) {
-            const todo = await todoContract['todos'](i);
-            todoList.push(todo);
+        try {
+            const todoList = [];
+            for (let i = 1; i <= todoCount; i++) {
+                const todo = await todoContract['todos'](i);
+                // Convert the big int values to strings or other suitable data types
+                const todoId = parseInt(todo[0]);
+                const todoText = todo[1];
+                const completed = todo[2];
+                console.log(typeof(todoId));
+                // Push the converted data to the todoList array
+                todoList.push([todoId, todoText, completed]);
+            }
+            
+
+            setTodos(todoList);
+            localStorage.setItem('data', JSON.stringify(todoList));
+
+            // Log the fetched todo list
+            console.log("Todo List:", todoList);
+        } catch (error) {
+            console.error("Error fetching todos:", error);
         }
+    };
 
-        // Log the fetched todo list
-        console.log("Todo List:", todoList);
-        setTodos(todoList)
-        
-    } catch (error) {
-        console.error("Error fetching todos:", error);
-    }
+    makeTodoContract();
 
-}
-makeTodoContract()
-    
-   }, [])
+}, []);
 
 
-   const handleRemoveTodo = async (todoId) => {
+
+   const handleRemoveTodo = async ({todoId}) => {
     try {
-    //call the write contract to remove the task
-        await removeTodo({ todoId });
+        console.log(todos);
+        // Update the todo list state by filtering out the removed task
+        const updatedData = todos.filter(todo => todo[0] !== todoId);
 
-        // filter out the selected todoElement from the list
-        setTodos(todos.filter(todo => todo.id !== todoId));
+        setTodos(updatedData);
+        localStorage.setItem('data', JSON.stringify(updatedData));
+        // Call the function to remove the task from the blockchain
+        await removeTodo({ todoId });
+        
+        
     } catch (error) {
         console.error("Error removing todo:", error);
     }
 };
 
+
+
+
     return (
         <>
       
         {todos.map((todo) => {
-          const todoIndex = todo[0];
-          const todoId = todo[0]; // 1    
-          const todoText = todo[1]; // 'Hello world'
-          const completed = todo[2]; // false
-
+         const todoIndex = parseInt(todo[0]);
+         const todoId = parseInt(todo[0]); // 1    
+         const todoText = todo[1]; // 'Hello world'
+         const completed = todo[2]; // false
+         
+        
 
           return (
             
@@ -74,7 +94,7 @@ makeTodoContract()
                 {`ID: ${todoId}, Text: ${todoText} Completed: ${completed === false}`}
             </li>
             <button onClick={() => toggleTodo({ todoId, completed })}>Done</button>
-            <button onClick={() => handleRemoveTodo(todoId)}>Delete Task</button>
+            <button onClick={() => { console.log(todoId); handleRemoveTodo({todoId}) }}>Delete Task</button>
             
 
             </div>

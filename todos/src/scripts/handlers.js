@@ -35,21 +35,23 @@ export const addTodo = async({inputValue}) => {
 try {
     const result = await writeContract.createTodo(inputValue);
     await result.wait();
-   
+    
+    
 } catch (error) {
     console.log("There was an error in adding todo", error);
 }
-addTodo()
+addTodo({ inputValue})
 }
 
 export const removeTodo = async({todoId}) => {
     try {
+        console.log(todoId);
         const result = await writeContract.removeTodo(todoId)
         await result.wait();
     } catch (error) {
        console.log("There was an error in removing todo", error); 
     }
-   removeTodo()
+  
 
 }
 

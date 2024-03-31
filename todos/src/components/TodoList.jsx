@@ -8,6 +8,7 @@ let provider;
 provider = new ethers.BrowserProvider(window.ethereum)
 
 export const TodoListComp = ({todoId, todoText}) => {
+    
     const[inputValue, setInputValue] = useState('')
     
    useEffect(() => {
@@ -19,6 +20,20 @@ export const TodoListComp = ({todoId, todoText}) => {
     setInputValue(event.target.value)
   }
    
+  const handleAddTodo = () => {
+    try {
+        addTodo({todoId, todoText, inputValue});
+        const newTodo = {
+            todoId: todos.length + 1, // Assign a unique ID
+            todoText: inputValue,
+            completed: false
+        };
+        const updatedTodos = [...todos, newTodo];
+        localStorage.setItem('data', JSON.stringify(updatedTodos));
+    } catch (error) {
+        console.log('there was an error in adding todos', error);
+    }
+}
     return (
         <>
         <ul>
@@ -35,7 +50,7 @@ export const TodoListComp = ({todoId, todoText}) => {
         onChange={onChange}
         placeholder="type your task here"
          />
-        <button onClick={()=> addTodo({todoId, todoText, inputValue})}>Add a new Task</button>
+        <button onClick={()=> handleAddTodo({todoId, todoText, inputValue})}>Add a new Task</button>
         
         </>
    )
